@@ -305,42 +305,59 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBsrEKS7eP2WOkZH_Ohpkk4fmhpw2p9EFPG1BLBS6UMMpK8c8KMqtw5xqnIS-mHjbz8g/exec"; // ← غيّريها برابط Apps Script
 
-    document.getElementById("cafeForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
+   document.getElementById("cafeForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-      const form = e.target;
-      const formData = new FormData(form);
+  const form = e.target;
+  const formData = new FormData(form);
 
-      // دمج قيم checkboxes في حقل واحد:
-      const styleMood = Array.from(document.querySelectorAll(".styleMood:checked")).map(el => el.value).join(", ");
-      const pages = Array.from(document.querySelectorAll(".pages:checked")).map(el => el.value).join(", ");
+  // استخراج الملف و تحويله Base64
+  const fileInput = form.querySelector("input[name='logoFile']");
+  let base64File = "";
+  let fileName = "";
+  let mimeType = "";
 
-      formData.append("styleMood", styleMood);
-      formData.append("pages", pages);
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    fileName = file.name;
+    mimeType = file.type;
 
-      // دمج الصفحات الخاصة إذا كتب شيء
-      const pagesExtra = form.pagesExtra.value;
-      if (pagesExtra) {
-        formData.append("pages", pages + (pages ? "، " : "") + pagesExtra);
-      }
-
-      try {
-        await fetch(SCRIPT_URL, {
-          method: "POST",
-          body: formData,
-          mode: "no-cors",mode: "no-cors",
-        });
-
-        document.getElementById("successMessage").style.display = "block";
-        form.reset();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } catch (error) {
-        alert("صار خطأ بسيط، جرّب مرة ثانية أو تواصلي معنا مباشرة 🙏");
-      }
+    base64File = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.readAsDataURL(file);
     });
+  }
+
+  // تحويل جميع الحقول إلى object لإرسالها
+  let data = {};
+  formData.forEach((value, key) => {
+    data[key] = value;
+  });
+
+  // إضافة الملف
+  data.logoFile = base64File;
+  data.logoFileName = fileName;
+  data.logoMimeType = mimeType;
+
+  // إرسال JSON بدل FormData
+  await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json"
+    },
+  });
+
+  document.getElementById("successMessage").style.display = "block";
+  form.reset();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
   </script>
 </body>
 </html>
+
 
 
 
