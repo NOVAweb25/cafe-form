@@ -328,6 +328,7 @@
         await fetch(SCRIPT_URL, {
           method: "POST",
           body: formData,
+          mode: "no-cors",mode: "no-cors",
         });
 
         document.getElementById("successMessage").style.display = "block";
@@ -340,4 +341,5 @@
   </script>
 </body>
 </html>
+
 
